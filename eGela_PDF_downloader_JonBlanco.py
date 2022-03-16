@@ -116,7 +116,55 @@ def sartuWebSistemakIrakasgaira(uri, cookie):
     edukia = erantzuna.content
     soup = BeautifulSoup(edukia, 'html.parser')
 
-    print(soup)
+
+    return soup
+def bilatuPDFGuztiak(soup,cookie):
+    listaLinks=[]
+    item_results = soup.find_all('img', {'class': 'iconlarge activityicon'})
+    for each in item_results:
+        if each['src'].find("/pdf") != -1:
+            print("\nPDF-dun linka aurkitu da:")
+            pdf_link = each.parent['href']
+            uria = pdf_link
+            headers = {'Host': 'egela.ehu.eus', 'Cookie': cookie}
+            erantzuna = requests.get(uria, headers=headers, allow_redirects=False)
+            print("GET " + uria)
+            kodea = erantzuna.status_code
+            deskribapena = erantzuna.reason
+            print(str(kodea) + " " + deskribapena)
+            edukia = erantzuna.content
+
+            soup2 = BeautifulSoup(edukia, 'html.parser')
+            div_pdf = soup2.find('div', {'class': 'resourceworkaround'})
+            pdf_link = div_pdf.a['href']
+            pdf_izena = pdf_link.split('/')[-1]
+            listaLinks.append(pdf_link)
+
+
+
+    return listaLinks,edukia
+
+
+def deskargatuPDFak(linkLista,edukia,cookie):
+    i=0
+    for link in linkLista:
+        metodoa = 'GET'
+        uria = link
+        goiburuak = {'Host': 'egela.ehu.eus', 'Cookie': cookie, 'Content-Type': 'application/x-www-form-urlencoded'}
+
+        erantzuna = requests.request(metodoa, uria, headers=goiburuak, allow_redirects=False)
+        i += 1
+        print("Deskargatzen ari den pdf-a: ", link)
+
+        pdf = open("PDF" + str(i) + ".pdf", 'wb')
+        pdf.write(erantzuna.content)
+        pdf.close()
+        print("DESKARGATUTA!!!")
+
+    print("PDF guztiak deskargatu dira")
+
+
+
 
 if __name__ == '__main__':
     listaLehenEskaera=lehen_eskaera()
@@ -140,4 +188,8 @@ if __name__ == '__main__':
         sys.exit(0)
 
     print("WEB SISTEMAK irakasgaira sartzen...")
-    sartuWebSistemakIrakasgaira(uriWebSis,cookie2)
+    soup=sartuWebSistemakIrakasgaira(uriWebSis,cookie2)
+    listaEmaitza=bilatuPDFGuztiak(soup,cookie2)
+    azkenErantzuna=listaEmaitza[1]
+    linkLista=listaEmaitza[0]
+    deskargatuPDFak(linkLista,azkenErantzuna,cookie2)
