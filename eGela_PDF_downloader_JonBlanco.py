@@ -1,4 +1,5 @@
 import getpass
+import signal
 import sys
 import urllib
 
@@ -16,26 +17,30 @@ def lehen_eskaera():
     metodoa = 'GET'
     uria = "https://egela.ehu.eus/login/index.php"
     goiburuak = {'Host': 'egela.ehu.eus'}
+    print("---------------LEHEN ESKAERA--------------\n")
+    print(metodoa+"\n")
+    print(uria+"\n")
 
+    print("---------------LEHEN ESKAERAREN ERANTZUNA--------------\n")
 
     erantzuna = requests.request(metodoa, uria,headers=goiburuak, allow_redirects=False)
 
     kodea = erantzuna.status_code
     deskribapena = erantzuna.reason
-    print("Lehen eskaera: "+str(kodea) + " " + deskribapena)
+    print("STATUS: "+str(kodea) + " DESKRIBAPENA: " + deskribapena)
     edukia = erantzuna.content
 
     Cookia = erantzuna.headers['Set-Cookie'].split(";")[0]
-    print("Cookie: "+Cookia)
+    print("Set-Cookie: "+Cookia+"\n")
 
     soup = BeautifulSoup(edukia, 'html.parser' )
     logint=soup.find('input',{'name': 'logintoken'})
     logintoken = logint["value"]
-    print("Logintoken: "+logintoken)
+    print("Logintoken: "+logintoken+"\n")
 
     action=soup.find('form')
     Location=action["action"]
-    print("Location: " +Location)
+    print("Location: " +Location+"\n")
     return (Location, Cookia, logintoken)
 
 
@@ -48,18 +53,24 @@ def bigarren_eskaera(Location, Cookia, logintoken):
                  'Cookie': Cookia,
                   'Content-Type': "application/x-www-form-urlencoded" }
     edukia = {'logintoken':logintoken, 'username':Username, 'password': Password}
+    print("---------------BIGARREN ESKAERA--------------\n")
+    print(metodoa + "\n")
+    print(uria + "\n")
+
+    print("---------------BIGARREN ESKAERAREN ERANTZUNA--------------\n")
+
     edukia_encoded = urllib.parse.urlencode(edukia)
     erantzuna2 = requests.request(metodoa, uria, data=edukia_encoded,headers=goiburuak, allow_redirects=False)
 
     kodea = erantzuna2.status_code
     deskribapena = erantzuna2.reason
-    print("Bigarren eskaera: "+str(kodea) + " " + deskribapena)
+    print("STATUS: "+str(kodea) + " DESKRIBAPENA: " + deskribapena)
     edukia = erantzuna2.content
 
     Cookia2 = erantzuna2.headers['Set-Cookie'].split(";")[0]
-
+    print("Set-Cookie: "+Cookia2)
     locationTestSession = erantzuna2.headers['Location'].split("?testsession=")[1]
-
+    print("Location: "+locationTestSession)
     return (Cookia2, locationTestSession)
 
 
@@ -69,13 +80,19 @@ def hirugarren_eskaera(cookie, testsession):
     uria = "https://egela.ehu.eus/login/index.php?testsession="+testsession
     goiburuak = {'Host': 'egela.ehu.eus', 'Cookie': cookie, 'Content-Type': 'application/x-www-form-urlencoded'}
 
+    print("---------------HIRUGARREN ESKAERA--------------\n")
+    print(metodoa + "\n")
+    print(uria + "\n")
+
+    print("---------------HIRUGARREN ESKAERAREN ERANTZUNA--------------\n")
 
     erantzuna = requests.request(metodoa, uria, headers=goiburuak, allow_redirects=False)
 
     kodea = erantzuna.status_code
     deskribapena = erantzuna.reason
-    print("Hirugarren eskaera: " + str(kodea) + " " + deskribapena)
+    print("STATUS: "+str(kodea) + " DESKRIBAPENA: " + deskribapena)
     location = erantzuna.headers['Location']
+    print("Location: "+location)
     return (location)
 
 def laugarren_eskaera(cookie, location):
@@ -83,11 +100,15 @@ def laugarren_eskaera(cookie, location):
     uria = location
     goiburuak = {'Host': 'egela.ehu.eus', 'Cookie': cookie, 'Content-Type': 'application/x-www-form-urlencoded'}
 
+    print("---------------HIRUGARREN ESKAERA--------------\n")
+    print(metodoa + "\n")
+    print(uria + "\n")
+
     erantzuna = requests.request(metodoa, uria, headers=goiburuak, allow_redirects=False)
 
     kodea = erantzuna.status_code
     deskribapena = erantzuna.reason
-    print("Laugarren eskaera: " + str(kodea) + " " + deskribapena)
+    print("STATUS: " + str(kodea) + " DESKRIBAPENA: " + deskribapena)
 
     edukia=erantzuna.content
     soup = BeautifulSoup(edukia, 'html.parser')
@@ -164,6 +185,8 @@ def deskargatuPDFak(linkLista,edukia,cookie):
     print("PDF guztiak deskargatu dira")
 
 
+def handler():
+    input("Teklaren bat sakatu jarraitzeko...")
 
 
 if __name__ == '__main__':
@@ -183,6 +206,8 @@ if __name__ == '__main__':
     if (izena==IzenAbizenak):
         print("BAI!! EGOKIA DA, ERABILTZAILEA "+IzenAbizenak+" da!!")
         #tekla sakatu arte ez aurrera joan--->HORI FALTA DA
+        handler()
+
     else:
         print("Ez")
         sys.exit(0)
